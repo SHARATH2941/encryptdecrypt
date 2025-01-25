@@ -1,87 +1,181 @@
-This tool provides a command-line interface for encrypting and decrypting files and directories using AES-256 encryption. It allows you to securely protect your files by generating encryption keys based on user input and ensures confidentiality by encrypting file contents.
+# Terminal Tool Documentation
 
-Features
+# Table of Contents
+ Overview
+ Features
+ Security Details
+ Installation
+ Dependencies
+ Usage
+ Code Documentation
+ Examples
+ Troubleshooting
+ Security Considerations
 
-AES-256 Encryption: Uses the industry-standard AES-256 algorithm with CBC mode for secure encryption.
-File Encryption: Encrypts individual files and appends a .enc extension.
-Directory Encryption: Encrypts all files in a directory and creates an encrypted copy.
-File Decryption: Decrypts encrypted files and restores their original contents.
-Directory Decryption: Decrypts all files in an encrypted directory and creates a decrypted copy.
-Metadata Handling: Includes metadata to validate keys and encryption details.
-Key Management: Generates secure encryption keys and metadata based on user input.
+# Project requirements:
+Creating a Tool that should encyrpt and decrypt the files.
+the tool should work on Linux, MacOs, Windows and Android.
+when we encrypt the files it should generate a 7 letter code which includes numbers, charecters, special charecters.
+when we decrypt the tool, if there is NN or MM modules in the 7 letter code, the tool should dynamically change the NN or MM to the date or month of file decryption. (ex: encyrption key : compaNN, then if the date of decrypiton is 20thOctober, the decryption key should be : compa20)
+if there is any special charecter in encyrption key, the decryption key should invert the NN or MM module. (encryption key : comp/NN,then if the date of decryption is 20thOctober, the decryption key should be : comp/02 )
 
-Requirements
-Python 3.6+
-The following Python libraries:
-cryptography
-pwinput
+# Overview
 
-To install the required libraries, run:
-pip install cryptography pwinput
+ The Terminal Encryption Tool is a command-line application that provides secure file and directory encryption using AES-256 encryption. It supports both file and directory encryption/decryption, with a unique key management system that incorporates date-based validation.
 
-Installation
-Clone this repository:
-git clone <repository-url>
-cd <repository-directory>
+# Features
 
-Ensure you have Python installed on your system.
-Install the required dependencies.
+ AES-256 encryption for files and directories
+ User-specific key management
+ Date-based key validation
+ Support for both single file and recursive directory encryption
+ Cross-platform compatibility (Windows, Linux, macOS)
+ Metadata embedding for enhanced security
 
-Usage
-The tool supports two main actions: encrypt and decrypt.
-Encrypt Files or Directories
+# Security Details
 
-Command Syntax
-python <script_name>.py encrypt <path_to_file_or_directory>
 
-Example
-Encrypt a file:
-python tool.py encrypt /path/to/file.txt
+ Encryption Algorithm: AES-256 in CBC mode
+ Key Derivation: PBKDF2 with SHA-256
+ Initialization Vector: Random 16-byte IV for each encryption
+ Padding: PKCS7 padding
+ Metadata: 8-byte metadata embedded in encrypted files
 
-Encrypt a directory:
-python tool.py encrypt /path/to/directory
 
-Notes
-You will be prompted to enter a 7-character key for encryption.
-Encrypted files will have a .enc extension.
-Directories will have a copy created with _enc appended to the directory name.
+# prerequisites.
 
-Decrypt Files or Directories
-Command Syntax
-python <script_name>.py decrypt <path_to_file_or_directory>
+Python 3.7 or higher
+pip (Python package installer)
+Docker desktop for windows and macos for docker image. 
 
-Example
+ # Installation
+ Install the required dependencies using pip:
+ pip install cryptography pwinput
+ 
+ Or create a virtual environment and install dependencies:
 
-Decrypt a file:
-python tool.py decrypt /path/to/file.txt.enc
+ python -m venv venv
+ source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+ pip install cryptography pwinput
 
-Decrypt a directory:
+Steps to run python commands:
 
-python tool.py decrypt /path/to/directory_enc
+# Run the below python command using encryption_tool.py script to encrypt a file:
 
-Notes
-You will be prompted to enter the decryption key used during encryption.
-Decrypted files will have their original names, and directories will have _dec appended to their names.
+ python encryption_tool.py encrypt path/to/file
 
-Key Generation
-The tool requires a 7-character key for encryption and decryption.
-The key can contain alphanumeric characters and special characters.
-The tool processes metadata to validate the encryption and decryption process.
+# Run the below python command using encryption_tool.py script to decrypt a file:
 
-Error Handling
+ python encryption_tool.py decrypt path/to/file.enc
 
-Invalid paths will result in an error message.
-If a wrong decryption key is provided, the tool will notify you of an invalid key.
-Files and directories that fail encryption or decryption will remain unaffected.
+# Run the below python command using encryption_tool.py script to encrypt a directory:
 
-Security Recommendations
-Use strong, unpredictable 7-character keys.
-Do not share your encryption key with untrusted parties.
-Store backup copies of your encrypted files in a secure location.
+ python encryption_tool.py encrypt path/to/directory
 
-License
-This tool is open-source and available under the MIT License. Feel free to modify and use it according to your needs.
+# Run the below python command using encryption_tool.py script to decrypt a directory:
 
-Disclaimer
+ python encryption_tool.py decrypt path/to/directory_enc
 
-This tool is provided as-is without any warranties. Use it at your own risk. The developers are not responsible for any data loss or misuse.
+# Secret Key Format
+ The key should be seven alphanumeric characters. You can include special date placeholders:
+
+ MM: Will be replaced with the current month
+
+ NN: Will be replaced with the current date
+
+ if there are any special characters in the secret key, it will reverse the digits of the MM and NN.
+
+Steps to execute the docker image:
+# To build the docker image
+   docker build -t imagename .
+ # To run the docker image when we want to encrypt the file:
+   docker run -it -v <path of the file>:/mnt <image name>  encrypt /mnt/<filename>
+#  To run the docker image when we want to decrypt the file:
+   docker run -it -v <path of the file>:/mnt <image name>  decrypt /mnt/<filename.enc>
+#  To run the docker image when we want to encrypt and decrypt the folder:
+   docker run -it -v <path of the folder>:/mnt <image name> encrypt /mnt/<foldername>
+#  To run the docker image when we want to encrypt and decrypt the folder:
+   docker run -it -v <path of the file>:/mnt <image name>  decrypt /mnt/<foldername_enc>
+
+# Examples:
+
+ Key: @3jcfA5 - Simple alphanumeric key
+ Key: cjnsMMa - Uses current month
+Key: @#$%!MM - Uses reversed current month
+ Key: NN()jjc - Uses current date
+
+
+# Code Documentation
+
+Key Functions
+
+ Generates an AES-256 key from the user's input key.
+
+ Uses PBKDF2 with SHA-256
+ 100,000 iterations
+ 32-byte key length
+
+ encrypt_file(file_path, key, remove_original=False)
+
+ Encrypts a single file.
+
+ Creates a new file with .enc extension
+ Embeds metadata and IV in the encrypted file
+ Uses AES-256 in CBC mode with PKCS7 padding
+
+
+ decrypt_file(file_path, key, remove_enc=False)
+
+ Decrypts an encrypted file.
+
+ Extracts metadata and IV from the encrypted file
+ Creates a new decrypted file
+
+
+# Global Variables
+
+
+ KEY_FILE: Path to the key storage file
+
+ ENC_KEY: User's encryption key
+
+ METADATA: Metadata string for encrypted files
+# Examples
+
+Example 1: Basic File Encryption
+
+ $ python encryption_tool.py encrypt secret.txt
+ Enter your key: \*\*A5bja
+ Encrypted and copied: secret.txt -> secret.txt.enc
+
+
+
+Example 2: Directory Encryption with Date-Based Key
+
+ $ python encryption_tool.py encrypt documents/
+ Enter your key: bahsMM2
+ Encrypted directory and created a copy: documents/ -> documents_enc/
+
+# Troubleshooting
+
+ Common Issues and Solutions
+ "Invalid key" error
+
+ Ensure your key matches the format used during encryption
+ Check if you're using the correct date-based key
+
+ "Decryption failed" error
+
+ Verify the file isn't corrupted
+ Ensure you're using the correct key
+
+ Permission errors
+ Check if you have read/write permissions in the directory
+
+#Security Considerations
+ 
+ File Handling
+ Original files can be optionally removed after encryption
+ Encrypted files use .enc extension
+
+
